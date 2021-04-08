@@ -1,16 +1,22 @@
 import os
+import subprocess
 import time
 import glob
 import sqlite3
 import pandas as pd
 import numpy as np
 import paho.mqtt.client as mqtt
+import threading
+
 
 from OuiLookup import OuiLookup
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from matplotlib import pyplot as plt
+from pathlib import Path
+
+home = str(Path.home())
 
 
 # Name of device manufacterers we want to mark as valid
@@ -19,7 +25,7 @@ MAKERS = ["SAMSUNG","APPLE","GOOGLE","LG","MOTOROLA","HUAWEI","ONEPLUS","SONY","
 
 broker_address="localhost" # Enter broker IP here if not localhost
 
-client = mqtt.Client("Pi-Fi") # create new instance
+client = mqtt.Client("mqtt-pifiscanner") # create new instance
 client.connect(broker_address) # connect to broker
 
 
@@ -27,8 +33,8 @@ client.connect(broker_address) # connect to broker
 
 # Returns string of latest kismet log file
 def get_kismet():
-    cwd = os.getcwd()
-    files_path = os.path.join(cwd, '*.kismet')
+    # cwd = os.getcwd()
+    files_path = os.path.join(home, '*.kismet')
     files = sorted(glob.iglob(files_path), key=os.path.getctime, reverse=True) 
     return files[0]
 
@@ -104,51 +110,53 @@ def create_train_csv(clients):
     clients=clients.drop(columns=["devmac"])
     clients.to_csv("train.csv",index=False)
 
-
+def scan_devices():
+    test=extract_clients()
+    
+    create_train_csv(test) # comment if you don't need to create your own csv for training
+    
+    
+    train = pd.read_csv("train.csv")
+    X_train = train[['bytes_data','strongest_signal','time']]
+    y_train = train[['outcome']]
+    X_test = test[['bytes_data','strongest_signal','time']]
+    y_test = test[['outcome']]
+    
+    
+    classifier = KNeighborsClassifier(n_neighbors=3)
+    classifier.fit(X_train, y_train.values.ravel())
+    
+    y_pred = classifier.predict(X_test)
+    
+    test["prediction"]=y_pred
+    
+    
+    print(confusion_matrix(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+    
+    
+    for index,row in test.iterrows():
+        if row["valid_vendor"]:
+            print('{}/{}'.format(row["vendor"],row["devmac"]))
+    estimate = test["prediction"].sum()
+    
+    print("\n***** ESTIMATE: %d *****\n" % estimate)
+    
+    client.publish("house/occupancy",int(estimate))
 
 
 if __name__ == "__main__":
     # Create wifi monitoring interface
-    os.system("sudo airmon-ng check kill")
-    os.system("sudo airmon-ng start wlan0")
-
-    # Run kismet on wifi monitoring interface
-    os.system("sudo kismet -c wlan0mon")
+    # os.system("sudo airmon-ng check kill")
+    # os.system("sudo airmon-ng start wlan0")
+    # os.system("sudo run_scanner.sh")
+    # Run kismet on wifi monitoring interface in subprocess
+    # p=subprocess.run(["sudo kismet -c wlan0mon"],capture_output=True,text=True,shell=True)
+    
     while(1):
-
-        test=extract_clients()
-
-        create_train_csv(test) # comment if you don't need to create your own csv for training
-
-
-        train = pd.read_csv("train.csv")
-        X_train = train[['bytes_data','strongest_signal','time']]
-        y_train = train[['outcome']]
-        X_test = test[['bytes_data','strongest_signal','time']]
-        y_test = test[['outcome']]
-
-
-        classifier = KNeighborsClassifier(n_neighbors=3)
-        classifier.fit(X_train, y_train.values.ravel())
-
-        y_pred = classifier.predict(X_test)
-
-        test["prediction"]=y_pred
-
-
-        # print(confusion_matrix(y_test, y_pred))
-        # print(classification_report(y_test, y_pred))
-
-        
-        # for index,row in test.iterrows():
-        #     if row["valid_vendor"]:
-        #         print('{}/{}'.format(row["vendor"],row["devmac"]))
-        
-
-        print(test["prediction"].sum())
-
-        client.publish("house/occupancy",test["prediction"].sum())
-        time.sleep(30)
+        # print(p.stdout)
+        scan_devices()
+        time.sleep(10)
 
     
 
