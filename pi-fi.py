@@ -123,7 +123,7 @@ def scan_devices():
     y_test = test[['outcome']]
     
     
-    classifier = KNeighborsClassifier(n_neighbors=3)
+    classifier = KNeighborsClassifier(n_neighbors=5)
     classifier.fit(X_train, y_train.values.ravel())
     
     y_pred = classifier.predict(X_test)
@@ -142,7 +142,7 @@ def scan_devices():
     
     print("\n***** ESTIMATE: %d *****\n" % estimate)
     
-    client.publish("house/occupancy",int(estimate))
+    client.publish("home/occupancy",int(estimate))
 
 
 if __name__ == "__main__":
