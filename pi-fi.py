@@ -12,23 +12,22 @@ import threading
 from OuiLookup import OuiLookup
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from matplotlib import pyplot as plt
 from pathlib import Path
 
-home = str(Path.home())
+KNN = 5 # Nearest neigbors algorithm number
 
 
 # Name of device manufacterers we want to mark as valid
 MAKERS = ["SAMSUNG","APPLE","GOOGLE","LG","MOTOROLA","HUAWEI","ONEPLUS","SONY","BLACKBERRY","INTEL","BROADCOM","KILLER"]
-
 
 broker_address="localhost" # Enter broker IP here if not localhost
 
 client = mqtt.Client("mqtt-pifiscanner") # create new instance
 client.connect(broker_address) # connect to broker
 
-
+home = str(Path.home())
 
 
 # Returns string of latest kismet log file
@@ -99,7 +98,7 @@ def extract_clients():
     clients["valid_bytes"]=np.where(clients["bytes_data"]==0,0,1)
    
     # Mark outcome as 1 if anycolumns are valid 
-    clients["outcome"]=np.where((clients["valid_vendor"]&((clients["valid_time"]+clients["valid_rssi"]+clients["valid_bytes"])>=2)),1,0)
+    clients["outcome"]=np.where(((clients["valid_vendor"]+(clients["valid_time"]+clients["valid_rssi"]+clients["valid_bytes"])>=3)),1,0)
     print("Valid devices: %d" % clients["outcome"].sum())
     
     con.close()
@@ -123,26 +122,29 @@ def scan_devices():
     y_test = test[['outcome']]
     
     
-    classifier = KNeighborsClassifier(n_neighbors=5)
+    classifier = KNeighborsClassifier(n_neighbors=KNN)
     classifier.fit(X_train, y_train.values.ravel())
     
     y_pred = classifier.predict(X_test)
     
-    test["prediction"]=y_pred
+    estimate = []
+
+    estimate.append(y_pred.sum())
     
     
     print(confusion_matrix(y_test, y_pred))
     print(classification_report(y_test, y_pred))
+    print("Accuracy: ", accuracy_score(y_test,y_pred))
     
     
     for index,row in test.iterrows():
         if row["valid_vendor"]:
             print('{}/{}'.format(row["vendor"],row["devmac"]))
-    estimate = test["prediction"].sum()
+    # estimate = test["prediction"].sum()
     
-    print("\n***** ESTIMATE: %d *****\n" % estimate)
+    print("\n***** ESTIMATE: %d *****\n" % estimate[-1])
     
-    client.publish("home/occupancy",int(estimate))
+    client.publish("home/occupancy",int(estimate[-1]))
 
 
 if __name__ == "__main__":
@@ -157,7 +159,3 @@ if __name__ == "__main__":
         # print(p.stdout)
         scan_devices()
         time.sleep(10)
-
-    
-
-    
