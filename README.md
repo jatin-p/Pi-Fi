@@ -7,26 +7,34 @@ you can estimate the occupancy/count devices close to the Raspberry Pi.
 The following Linux packages must be installed on the RPi:
 
 Kismet:
-1.	wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -
-2.	echo 'deb https://www.kismetwireless.net/repos/apt/release/kali kali main' | sudo tee /etc/apt/sources.list.d/kismet.list
-3.	sudo apt update
-4.	sudo apt install kismet
+```
+wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -
+echo 'deb https://www.kismetwireless.net/repos/apt/release/kali kali main' | sudo tee /etc/apt/sources.list.d/kismet.list
+sudo apt update
+sudo apt install kismet
+```
 
 MQTT Broker mosquito:
-1.	sudo apt-get install mosquitto mosquito-clients 
-
+```
+sudo apt-get install mosquitto mosquito-clients 
+```
 Python Packages:
-1.	pip3 install pandas  
-2.	pip3 install sqlite3 
-3.	pip3 install numpy 
-4.	pip3 install ouilookup
-5.	pip3 install -U scikit-learn
-
+```
+pip3 install pandas  
+pip3 install sqlite3 
+pip3 install numpy 
+pip3 install ouilookup
+pip3 install -U scikit-learn
+```
 
 Now we create a monitoring interface via the airmon-ng application and the kismet application:
+```
 sudo airmon-ng check kill
 sudo airmon-ng start wlan0
 sudo kismet -c wlan0mon
+```
 In a new terminal window we run the python script with the following command by opening a terminal in the folder which contains 
 the “pi-fi.py” and “train.csv” files downloaded from GitHub this repository.
+```
 python3 pi-fi.py
+```
