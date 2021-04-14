@@ -2,8 +2,8 @@
 An occupancy estimator using Wi-Fi and big data methods
 
 With this program running in its own terminal window, along with Kismet running on the same Raspberry Pi in Kali Linux, 
-you can estimate the occupancy/count devices close to the Pi. You must have a Pi with the nexmon patch installed to 
-create a monitoring interface.
+you can estimate the occupancy/count devices close to the Pi. You must have a Pi with the [nexmon patch](https://github.com/seemoo-lab/nexmon) installed to 
+create a monitoring interface. Kali Linux for Raspberry Pi has this patch pre-installed so that is reccomended along with airmon-ng.
 
 The following Linux packages must be installed on the RPi:
 
