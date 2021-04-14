@@ -1,8 +1,9 @@
 # Pi-Fi
 An occupancy estimator using Wi-Fi and big data methods
 
-With this program running in its own terminal window, along with Kismet running on the same RPi in Kali Linux, 
-you can estimate the occupancy/count devices close to the Raspberry Pi.
+With this program running in its own terminal window, along with Kismet running on the same Raspberry Pi in Kali Linux, 
+you can estimate the occupancy/count devices close to the Pi. You must have a Pi with the nexmon patch installed to 
+create a monitoring interface.
 
 The following Linux packages must be installed on the RPi:
 
