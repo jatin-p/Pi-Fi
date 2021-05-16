@@ -19,8 +19,9 @@ from pathlib import Path
 KNN = 5 # Nearest neigbors algorithm number
 
 
-# Name of device manufacterers we want to mark as valid
-MAKERS = ["SAMSUNG","APPLE","GOOGLE","LG","MOTOROLA","HUAWEI","ONEPLUS","SONY","BLACKBERRY","INTEL","BROADCOM","KILLER"]
+# Name of device manufacterers we want to mark as valid ("INTEL","KILLER" were removed due to MAC
+# address spoofing which causes a larger estimate)
+MAKERS = ["SAMSUNG","APPLE","GOOGLE","LG","MOTOROLA","HUAWEI","ONEPLUS","SONY","BLACKBERRY","BROADCOM"]
 
 broker_address="localhost" # Enter broker IP here if not localhost
 
